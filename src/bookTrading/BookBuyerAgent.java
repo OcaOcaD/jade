@@ -111,7 +111,7 @@ public class BookBuyerAgent extends Agent {
 				for (int i = 0; i < sellerAgents.length; ++i) {
 					cfp.addReceiver(sellerAgents[i]);
 				} 
-				cfp.setContent(targetBookTitle+"|"+paymentType);
+				cfp.setContent(targetBookTitle+"-"+paymentType);
 				cfp.setConversationId("book-trade");
 				cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
 				myAgent.send(cfp);
@@ -151,11 +151,13 @@ public class BookBuyerAgent extends Agent {
 				// Send the purchase order to the seller that provided the best offer
 				ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 				order.addReceiver(bestSeller);
-				order.setContent(targetBookTitle);
+				String titleAndPaymend = "";
+				titleAndPaymend = targetBookTitle+"-"+paymentType;
+				order.setContent(titleAndPaymend);
 				order.setConversationId("book-trade");
 				order.setReplyWith("order"+System.currentTimeMillis());
 				myAgent.send(order);
-				System.out.println("Purchace Order sent. "+bestSeller+" - "+targetBookTitle);
+				System.out.println("Purchace Order sent. "+bestSeller+" - "+targetBookTitle+" - "+paymentType);
 				// Prepare the template to get the purchase order reply
 				mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"),
 						MessageTemplate.MatchInReplyTo(order.getReplyWith()));
