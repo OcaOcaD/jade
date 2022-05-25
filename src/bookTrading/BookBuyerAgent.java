@@ -124,10 +124,12 @@ public class BookBuyerAgent extends Agent {
 				// Receive all proposals/refusals from seller agents
 				ACLMessage reply = myAgent.receive(mt);
 				if (reply != null) {
+					System.out.println("Reply received");
 					// Reply received
 					if (reply.getPerformative() == ACLMessage.PROPOSE) {
 						// This is an offer 
 						int price = Integer.parseInt(reply.getContent());
+						System.out.println("Price received from seller: "+price);
 						if (bestSeller == null || price < bestPrice) {
 							// This is the best offer at present
 							bestPrice = price;
@@ -141,6 +143,7 @@ public class BookBuyerAgent extends Agent {
 					}
 				}
 				else {
+					System.out.println("Blocked from step 1");
 					block();
 				}
 				break;
@@ -152,6 +155,7 @@ public class BookBuyerAgent extends Agent {
 				order.setConversationId("book-trade");
 				order.setReplyWith("order"+System.currentTimeMillis());
 				myAgent.send(order);
+				System.out.println("Purchace Order sent. "+bestSeller+" - "+targetBookTitle);
 				// Prepare the template to get the purchase order reply
 				mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"),
 						MessageTemplate.MatchInReplyTo(order.getReplyWith()));

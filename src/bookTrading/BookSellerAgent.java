@@ -11,6 +11,17 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import net.sf.clipsrules.jni.*;
 import java.util.*;
 
+class Rule{
+
+	private String p_name;
+	private String card_name;
+	private String benefitsString;
+	Rule(String p_name,String card_name, String benefitsString){
+		this.p_name = p_name;
+		this.card_name = card_name;
+		this.benefitsString = benefitsString;
+	}
+}
 
 class Product{
 	private int part_number;
@@ -18,6 +29,7 @@ class Product{
 	private String category;
 	private int price;
 	private String paymentMethod;
+	private Rule rule;
 
 	public int get_part_number(){
 		return part_number;
@@ -42,6 +54,9 @@ class Product{
 		this.category = category;
 		this.price = price;
 	};
+	public void setRule(Rule r){
+		this.rule = r; 
+	}
 }
 
 class Catal {
@@ -54,15 +69,34 @@ class Catal {
 		return list.size();
 	}
 	public int productExists( String title, String payment ){
+		System.out.println("tITLE from buyer:"+title);
+		int price = 69;
 		for (int i = 0; i < list.size(); i++) {
-			if( list.get(i).get_name() == title ){
+			System.out.println("\t Comparing title, get_name: "+ title+" , "+list.get(i).get_name());
+			// if( list.get(i).get_name().trim() == title.trim() ){
+			if( Objects.equals(list.get(i).get_name().trim(), title.trim()) ){
 				// Product exists. Now check for payment method
-				System.out.println("Seller-");
-
-
+				price = list.get(i).get_price();
+				System.out.println("Same title. \tPrice: "+price);
+				return price;
 				
 			}else{
+				System.out.println("titles didn't match. Price was "+price);
 				return -1;
+			}
+		}
+		return -1;
+	}
+	public int removeByTitle(String title){
+		String payment;
+		int price;
+		payment = "";
+		for (int i = 0; i < list.size(); i++) {
+			if( Objects.equals(list.get(i).get_name().trim(), title.trim()) ){
+				// Product exists. Now check for payment method
+				price = this.list.get(i).get_price();
+				this.list.remove(i);
+				return price;
 			}
 		}
 		return -1;
@@ -83,16 +117,16 @@ public class BookSellerAgent extends Agent {
 		try {
 			clips = new Environment();
 
-			clips.build("(deftemplate product (slot part-number) (multislot name) (slot category) (slot price))");
+			clips.build("(deftemplate product (slot part-number) (multislot name) (slot category) (slot price) )");
 			clips.build("(defrule my-rule11 (product (name ?n) (price 9.99)) => (printout  t \"Customer name found:\"  ?n crlf ))");
 			clips.build("(deffacts products (product (part-number 1234) (name USB Memory) (category storage) (price 9.99)) (product (name Amplifier) (category electronics) (part-number 2341) (price 399.99)) (product (name Speakers) (category electronics) (part-number 23241) (price 19.99)) (product (name iPhone 7) (category smartphone) (part-number 3412) (price 99.99)) (product (name Samsung Edge 7) (category smartphone) (part-number 34412) (price 88.99)) )");
 			// Cards
 			clips.build("(deftemplate tarjeta (slot type) (slot company) (slot level) )");
 			clips.build("(deffacts tarjetas (tarjeta (type mastercard ) (company banamex) (level basic )) (tarjeta (type visa) (company bbva) (level gold)) (tarjeta (type visa) (company liverpool) (level black)) (tarjeta (type visa) (company oxxo) (level basic)) (tarjeta (type mastercard ) (company mastercard) (level black)))");
-			
-			
-
-
+		
+			clips.build("(defrule regla1 (product (category smartphone)) (tarjeta (name ?n)) => (printout t \"En la compra, de un smartphone, ofrecemos una funda y mica con el 15% de descuento\" crlf))");
+			clips.build("(defrule regla2(product (name iphone_13))(tarjeta (name ?n)) =>(printout t \"En la compra de un iPhone 13, con targeta Banamex, ofrecemos 24 meses sin intereses\" crlf))");
+			clips.run();
 			// // String evalStr = "(find-all-facts ((?f product)) TRUE)";
 			// // String evalStr = "(defrule my-rule-kbs ?p <- (product (part-number ?x)  ) (test (= ?x 1234)) => (printout  \"Hola:  \" ?p crlf))";
 			// // String evalStr = 
@@ -104,8 +138,7 @@ public class BookSellerAgent extends Agent {
 			// clips.eval("(list-deftemplates)"); 
 			// clips.reset();
 			// clips.eval("(facts)"); 
-			
-			
+		
 
 			// clips.eval("(rules)");
 			// clips.run();
@@ -214,6 +247,7 @@ public class BookSellerAgent extends Agent {
 			if (msg != null) {
 				// CFP Message received. Process it
 				String messageContent = msg.getContent();
+				System.out.println(" Raw message content : "+messageContent);
 
 				String[] messageContent_array = messageContent.split("|");
 
@@ -226,15 +260,18 @@ public class BookSellerAgent extends Agent {
 
 				// Integer price = (Integer) catalogue.get(title);
 				Integer price = myCatalogue.productExists(title, payment);
+				System.out.println("Product price found in my catalogue: "+price);
 				
 				// Integer price = (Integer) myCatalogue.list
 				if (price != -1) {
 					// The requested book is available for sale. Reply with the price
+					System.out.println("ok");
 					reply.setPerformative(ACLMessage.PROPOSE);
 					reply.setContent(String.valueOf(price.intValue()));
 				}
 				else {
 					// The requested book is NOT available for sale.
+					System.out.println("nenei");
 					reply.setPerformative(ACLMessage.REFUSE);
 					reply.setContent("not-available");
 				}
@@ -259,23 +296,29 @@ public class BookSellerAgent extends Agent {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
+				System.out.println("Order received");
 				// ACCEPT_PROPOSAL Message received. Process it
 				String title = msg.getContent();
 				ACLMessage reply = msg.createReply();
 
-				Integer price = (Integer) catalogue.remove(title);
-				if (price != null) {
+				// remove from myCatalogue insteaD 
+				// Integer price = (Integer) catalogue.remove(title);
+				Integer price = myCatalogue.removeByTitle(title);
+
+				if (price != -1) {
 					reply.setPerformative(ACLMessage.INFORM);
 					System.out.println(title+" sold to agent "+msg.getSender().getName());
 				}
 				else {
 					// The requested book has been sold to another buyer in the meanwhile .
+					System.out.println("Failed to find product");
 					reply.setPerformative(ACLMessage.FAILURE);
 					reply.setContent("not-available");
 				}
 				myAgent.send(reply);
 			}
 			else {
+				System.out.println("Order blocked.");
 				block();
 			}
 		}
