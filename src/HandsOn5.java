@@ -92,10 +92,10 @@ public class HandsOn5 extends Agent {
         public void action() {
             GD  linear = new GD ();
             // Generate initial point (Could be random)
-            double x= 0 + Math.random() * (5 - 0);
+            double x= 0 + Math.random() * (40 - 0);
             linear.setXvalue( x );
-            linear.gradientDescent();
             // linear.setXvalue(Integer.valueOf(JOptionPane.showInputDialog("Insert value for X: ")));
+            linear.gradientDescent();
             linear.LinearRegression();
             System.out.println("''Best''' betas found: ");
             System.out.println("\t Beta 0 ="+String.valueOf(linear.getBeta0()));

@@ -97,19 +97,19 @@ class Catal {
 	}
 
 	public int productExists(String title, String payment) {
-		System.out.println("tITLE from buyer:" + title);
+		// System.out.println("tITLE from buyer:" + title);
 		int price = 69;
 		for (int i = 0; i < list.size(); i++) {
-			System.out.println("\t Comparing title, get_name: " + title + " , " + list.get(i).get_name());
+			System.out.println("\t\t Comparing title, get_name: " + title + " , " + list.get(i).get_name());
 			// if( list.get(i).get_name().trim() == title.trim() ){
 			if (Objects.equals(list.get(i).get_name(), title)) {
 				// Product exists. Now check for payment method
 				price = list.get(i).get_price();
-				System.out.println("Same title. \tPrice: " + price);
+				System.out.println("\t\t\tResuls=Same title. \tPrice: " + price);
 				return price;
 
 			} else {
-				System.out.println("titles didn't match. Price was " + price);
+				System.out.println("\t\t\t Titles didn't match. Price was " + price);
 			}
 		}
 		return -1;
@@ -118,20 +118,20 @@ class Catal {
 	public String removeByTitle(String title, String payment) {
 
 		int price;
-		String benefitsString = " ** No especial offer ** ";
+		String benefitsString = " ** No especial benefits in this purchace ** ";
 		// Check if a there is a rule with the same product and paymeny
-		System.out.println(" All Rules Size: "+this.allRules.size());
-		System.out.println(" Looking for rules with: "+title+payment);
+		System.out.println(" All Rules Size: " + this.allRules.size());
+		System.out.println(" Looking for rules with: " + title + payment + " comparing");
 		for (int i = 0; i < this.allRules.size(); i++) {
 			Rule temp_rule = this.allRules.get(i);
-			System.out.println(" Comparing:  \tRULE_GET_NAME\tRULE_GET_CARD_NAME");
-			System.out.println("\t"+temp_rule.get_p_name()+"-"+temp_rule.get_card_name());
-			if ( Objects.equals( title, temp_rule.get_p_name()) && Objects.equals(payment, temp_rule.get_card_name())) {
+			System.out.println(" \t\t\tRULE_GET_NAME\tRULE_GET_CARD_NAME");
+			System.out.println("\t\t\t" + temp_rule.get_p_name() + "-\t-" + temp_rule.get_card_name());
+			if (Objects.equals(title, temp_rule.get_p_name()) && Objects.equals(payment, temp_rule.get_card_name())) {
 				// It means there is a rule with the same product name and card name.
-				System.out.println(" ----------------- Correct");
+				System.out.println(" ----------------- There is a rule with the same product and payment method");
 				benefitsString = temp_rule.get_benefitsString();
-			}else{
-				System.out.println(" ----------------- No no");
+			} else {
+				// System.out.println(" ----------------- No no");
 			}
 		}
 		// find the product going throught he list and comparing names
@@ -181,7 +181,7 @@ public class BookSellerAgent extends Agent {
 			clips.build(
 					"(defrule regla1 (product (name samsung) (category smartphone)) (tarjeta (name bbva)) => (printout t \"En la compra, de un smartphone, ofrecemos una funda y mica con el 15% de descuento\" crlf))");
 			Rule rule1 = new Rule("samsung", "bbva",
-					"En la compra, de un smartphone, ofrecemos una funda y mica con el 15% de descuento");
+					"En la compra de un smartphone 'samsung' usando bbva ofrecemos una funda y mica con el 15% de descuento");
 			myCatalogue.addRule(rule1);
 			// Rule 2
 			clips.build(
@@ -189,13 +189,24 @@ public class BookSellerAgent extends Agent {
 			Rule rule2 = new Rule("iphone", "banamex",
 					"En la compra de un iPhone 13, con targeta Banamex, ofrecemos 24 meses sin intereses");
 			myCatalogue.addRule(rule2);
+			// Rule 3
+			clips.build(
+					"(defrule regla3 (product (name hp) (category computadora)) (tarjeta (name oxxo)) => (printout t \"En la compra de una HP, con tarjeta oxxo , ofrece 12 meses sin intereses\" crlf))");
+			Rule rule3 = new Rule("hp", "oxxo",
+					"En la compra de una HP, con tarjeta oxxo , ofrece 12 meses sin intereses");
+			myCatalogue.addRule(rule3);
+			// Rule 4
+			clips.build(
+					"(defrule regla4 (product (name mac)) (tarjeta (name mastercard)) => (printout t \"En la compra de una mac, por cada 1000 pesos de compra se entregara 100 pesos en vales\" crlf))");
+			Rule rule4 = new Rule("mac", "mastercard",
+					"En la compra de una mac, por cada 1000 pesos de compra se entregara 100 pesos en vales");
+			myCatalogue.addRule(rule4);
 
 		} catch (Exception e) {
 		}
 
 		// Create the catalogue
 		catalogue = new Hashtable();
-		
 
 		// Create and show the GUI
 		myGui = new BookSellerGui(this);
@@ -240,7 +251,7 @@ public class BookSellerAgent extends Agent {
 	 */
 	public void updateCatalogue(final String title, final int price, final String category, final int part_number) {
 		// IN THE CLASS parte nombre cat precio
-
+		System.out.println("@ ADDING PRODUCT");
 		addBehaviour(new OneShotBehaviour() {
 			public void action() {
 				Product p = new Product(part_number, title, category, price);
@@ -254,8 +265,10 @@ public class BookSellerAgent extends Agent {
 				// clips.build("(deffacts products (product (part-number "+part_number+") (name
 				// "+title+") (category "+category+") (price "+price+")) )");
 
-				System.out.println(title + " inserted into catalogue. Price = " + price + " category: " + category);
-				System.out.println(" My catalogue: " + myCatalogue.prodCount());
+				System.out.println("|\n|\tProduct: " + title + " inserted into catalogue.\n|\t\t Price = " + price
+						+ "\n|\tCategory: " + category + "\n|");
+
+				System.out.println("My catalogue has " + myCatalogue.prodCount()+" products");
 				// Re build products def facts
 				String clipsString = "(deffacts products";
 
@@ -272,12 +285,15 @@ public class BookSellerAgent extends Agent {
 				try {
 					clips.build(clipsString);
 					clips.reset();
+					System.out.println("\nProducts and Cards available (CLIPS FACTS): ");
 					clips.eval("(facts)");
-					System.out.println("Rules: ");
+					System.out.println();
+					System.out.println("Offers and discounts (CLIPS RULES): ");
 					clips.eval("(run)");
 
 				} catch (Exception e) {
 				}
+				System.out.println("\nEnd. Product added.");
 
 			}
 		});
@@ -293,53 +309,49 @@ public class BookSellerAgent extends Agent {
 	 */
 	private class OfferRequestsServer extends CyclicBehaviour {
 		public void action() {
-			System.out.println("\t--- --- --- ---");
+			System.out.println("--- --- Offer request server --- ---");
 
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
 				// CFP Message received. Process it
 				String messageContent = msg.getContent().toString();
-				System.out.println(" Raw message content : " + messageContent);
+				System.out.println("Raw message content : " + messageContent);
 
-				// String[] messageContent_array = messageContent.split("|");
-
-				// String[] parts = messageContent.split("|");
-				// System.out.println("message content after spli");
-				// for (int i = 0; i < parts.size() ; i++) {
-				// System.out.print(parts[i] +" , ");
-				// }
 				String[] splitted = messageContent.split("-");
 				System.out.println();
 				String title = splitted[0]; // 123
 				String payment = splitted[1]; // 654321
-				System.out.println("splited size  " + payment);
+				System.out.println("\tBuyer asking for: " + title);
+				System.out.println("\tWilling to pay with: " + payment);
+				System.out.println();
 
 				ACLMessage reply = msg.createReply();
 
 				// Integer price = (Integer) catalogue.get(title);
 				Integer price = myCatalogue.productExists(title, payment);
-				System.out.println("Product price found in my catalogue: " + price);
+				System.out.println("\t Found in catalogue? -> Price: " + price);
 
+				// System.out.println("--- End of Offer request ---" );
 				// Integer price = (Integer) myCatalogue.list
 				if (price != -1) {
 					// The requested book is available for sale. Reply with the price
-					try {
-
-						clips.eval("(run)");
-					} catch (Exception e) {
-					}
-					System.out.println("ok");
+					// try {
+					// clips.eval("(run)");
+					// } catch (Exception e) {
+					// }
+					System.out.println("\tYes. Replying to buyer. Product exist. Price:" + price);
 					reply.setPerformative(ACLMessage.PROPOSE);
 					reply.setContent(String.valueOf(price.intValue()));
 				} else {
 					// The requested book is NOT available for sale.
-					System.out.println("nenei");
+					System.out.println("\tNo. Replying with failure (REFUSE)");
 					reply.setPerformative(ACLMessage.REFUSE);
 					reply.setContent("not-available");
 				}
 				myAgent.send(reply);
 			} else {
+				// System.out.println("Empty offer request");
 				block();
 			}
 		}
@@ -358,16 +370,20 @@ public class BookSellerAgent extends Agent {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {
-				System.out.println("Order received");
+				System.out.println(" ___ ___ ___Purchace Order received___ ___ ___");
 				// ACCEPT_PROPOSAL Message received. Process it
 				String messageContent = msg.getContent();
-				System.out.println("Message Content received in BookSellerAgent$PurchaseOrdersServer"+messageContent);
+				System.out.println("Raw Message Content in PurchOrder: " + messageContent);
 				ACLMessage reply = msg.createReply();
 
 				String[] splitted = messageContent.split("-");
 				System.out.println();
 				String title = splitted[0]; // 123
 				String payment = splitted[1]; // 654321
+
+				System.out.println("\tBuyer ordering to purchace: " + title);
+				System.out.println("\tPaying with: " + payment);
+				System.out.println();
 
 				// Remove from myCatalogue
 				String priceAndBenefits = myCatalogue.removeByTitle(title, payment);
@@ -378,7 +394,7 @@ public class BookSellerAgent extends Agent {
 					String benefits = splittedPriceAndBenefits[1]; // "** No especial offer **" OR "50% discount"
 
 					reply.setPerformative(ACLMessage.INFORM);
-					System.out.println("\t" + title + " sold with benefits:" + benefits + " to agent "
+					System.out.println("\tDONE!" + title + " sold with benefits:" + benefits + " to agent "
 							+ msg.getSender().getName());
 				} else {
 					// The requested book has been sold to another buyer in the meanwhile .
@@ -388,7 +404,7 @@ public class BookSellerAgent extends Agent {
 				}
 				myAgent.send(reply);
 			} else {
-				System.out.println("Order blocked.");
+				// System.out.println("Order blocked.");
 				block();
 			}
 		}
